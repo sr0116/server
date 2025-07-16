@@ -14,6 +14,9 @@
  		<result column="cno" property="cno"/>
  		<result column="replyCnt" property="replyCnt"/>
  		<result column="attachCnt" property="attachCnt"/>
+		<result column="grp" property="grp"/>
+		<result column="seq" property="seq"/>
+		<result column="depth" property="depth"/>
  		
  		<collection property="attachs" ofType="attach">
             <result column="uuid" property="uuid" />
@@ -81,8 +84,39 @@
  	select max(bno) from tbl_board
  	</selectKey>
   	</insert>
-  	
-  	<!-- 게시글 갯수 -->
+
+	<!-- 답글 작성시 지정위치에 seq 취득 -->
+	<select id="selectMaxSeq" resultType="int">
+		select COALESCE(max(seq), #{seq})
+		from tbl_board b
+		where grp = #{grp}
+		and seq > #{seq}
+		and depth > #{depth}
+		and not exists (
+		select 1
+		from tbl_board mid
+		where grp = b.grp
+		and seq > #{seq}
+		and seq &lt; b.seq
+		and depth &lt;= #{depth}
+		)
+	</select>
+
+	<!-- 답글이 되기위해 seq를 1증가 -->
+	<update id="updateSeqIncrease">
+		update tbl_board set seq = seq + 1 where grp = #{grp} and seq >= #{seq}
+	</update>
+
+	<!-- 답글 등록 -->
+	<insert id="insertChild">
+		insert into tbl_board (title, content, id, cno, grp, seq, depth) values (#{title}, #{content}, #{id}, #{cno}, #{grp}, #{seq}, #{depth})
+		<selectKey keyProperty="bno" resultType="long" order="AFTER">
+			select max(bno) from tbl_board
+		</selectKey>
+	</insert>
+
+
+	<!-- 게시글 갯수 -->
   	<select id="getCount" resultType="long">
   	select count(*) from tbl_board 
   	<include refid="criteria" />

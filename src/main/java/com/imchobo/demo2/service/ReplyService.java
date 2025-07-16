@@ -17,6 +17,7 @@ public class ReplyService {
   private ReplyMapper mapper;
 
   public Reply findBy(Long rno) {
+
     return mapper.selectOne(rno);
   }
   //

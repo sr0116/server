@@ -24,23 +24,26 @@ public class MemberController {
   @GetMapping("login")
   public void loginForm() {
   }
+  @GetMapping("register")
+  public void register() {
+  }
 
   @PostMapping("login")
   public String login(Member member, HttpSession session, RedirectAttributes redirectAttributes) {
     log.info("{}", member);
     if (memberService.login(member.getId(), member.getPw())) {
-      session.setAttribute("meber", memberService.findByID(member.getId()));
+      session.setAttribute("member", memberService.findByID(member.getId()));
       return "redirect:/";
     }
     redirectAttributes.addFlashAttribute("msg", "로그인 실패");
     return "redirect:/member/login";
   }
 
-//  @RequestMapping(value = "logout", method = {RequestMethod.GET, RequestMethod.POST})
-//  public String login(HttpSession session) {
-//    session.invalidate();
-//    return "redirect:/";
-//  }
+  @RequestMapping(value = "logout", method = {RequestMethod.GET, RequestMethod.POST})
+  public String login(HttpSession session) {
+    session.invalidate();
+    return "redirect:/";
+  }
 
     @PostMapping("register")
     public String register(Member member) {

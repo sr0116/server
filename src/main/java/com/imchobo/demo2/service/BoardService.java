@@ -26,9 +26,9 @@ public class BoardService {
 
 //
 @Transactional
-public void list(Criteria cri) {
-    List<Board> list = mapper.list(cri);
-  }
+public List<Board> list(Criteria cri) {
+  return mapper.list(cri); //1page 10개씩
+}
 
 
 //////	조회수 ////
@@ -39,8 +39,8 @@ return mapper.selectOne(bno);
 }
 //// 카운트 //
 @Transactional
-public long getCount (Criteria cri){
-  return mapper.getCount(cri);
+public long getCount (Criteria criteria){
+  return mapper.getCount(criteria);
 }
 //// 수정  //
 @Transactional
@@ -60,20 +60,38 @@ public void modify (Board board){
 //    }
 
 // 글쓰기
+
 @Transactional
-public void write(Board board) {
-  Long bno = board.getBno();
-  if (bno == null) {
-    mapper.insert(board);
+public void write (Board board){
+  Long bno = board.getBno();  // bno는 부모의 번호
+  if (bno == null) {  // 여기는 답글 아님
+    mapper.insert(board);   // 이 시점에 부여
+    mapper.updateGrpMyself(board);
+  } else { // 여기가 답글
+    // 1. 부모글 조회
+    Board parent = mapper.selectOne(bno);  // 부모글을 가져오는거
+    // 내 위치에 작성하기 위한 update. 나보다 seq값을 더 밀어내야함
+
+    // 2. maxSeq 취득
+    // select
+//    int maxSeq = mapper.selectMaxSeq(parent);
+//    board.setSeq(maxSeq + 1); // 수정
+//
+//    // 3. 해당조건의 게시글들의 seq 밀어내기
+//    board.setGrp(parent.getGrp());  // 확정
+//    board.setDepth(parent.getDepth() + 1); // 확정
+//    mapper.updateSeqIncease(board);  // 이제 한번 밀려남.
+
+    // 4. insert
+    mapper.insertChild(board);
+
   }
-  // 나중에 글번호 반환 필요할수도 있음
 
-    board.getAttachs().forEach(a -> {
-      a.setBno(board.getBno());
-      attachMapper.insert(a);
-      // 나중에 수정 사항 추가 하기(블로그에 있음)
-    });
-
+////			mapper.insert(board);
+  board.getAttachs().forEach(a -> {
+    a.setBno(board.getBno());
+    attachMapper.insert(a);
+  });
 }
 // 글 삭제
 @Transactional
